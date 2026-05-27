@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎁 Treasure Hunt!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    --sky: #fff9f0;
+    --cloud: #ffffff;
+    --sun: #FFD93D;
+    --coral: #FF6B6B;
+    --mint: #6BCB77;
+    --sky-blue: #4D96FF;
+    --purple: #C77DFF;
+    --orange: #FF9F43;
+    --pink: #FF6FD8;
+    --shadow: rgba(0,0,0,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #87CEEB 0%, #b8edff 40%, #d4f5c4 100%);
+    font-family: 'Nunito', sans-serif;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Floating clouds */
+  .cloud {
+    position: fixed;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud-1 { width: 120px; height: 40px; top: 8%; left: -140px; animation: floatCloud 18s linear infinite; }
+  .cloud-1::before { width: 60px; height: 60px; top: -30px; left: 15px; }
+  .cloud-1::after  { width: 40px; height: 40px; top: -18px; left: 55px; }
+
+  .cloud-2 { width: 90px; height: 30px; top: 20%; left: -120px; animation: floatCloud 24s linear infinite 6s; }
+  .cloud-2::before { width: 45px; height: 45px; top: -24px; left: 10px; }
+  .cloud-2::after  { width: 30px; height: 30px; top: -14px; left: 40px; }
+
+  .cloud-3 { width: 150px; height: 50px; top: 5%; left: -180px; animation: floatCloud 30s linear infinite 12s; }
+  .cloud-3::before { width: 70px; height: 70px; top: -38px; left: 20px; }
+  .cloud-3::after  { width: 50px; height: 50px; top: -22px; left: 70px; }
+
+  @keyframes floatCloud {
+    from { left: -200px; }
+    to   { left: 110vw; }
+  }
+
+  /* Floating stars background */
+  .star-bg {
+    position: fixed;
+    font-size: 22px;
+    pointer-events: none;
+    z-index: 0;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* Main wrapper */
+  .game-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+    min-height: 100vh;
+  }
+
+  /* Title banner */
+  .title-banner {
+    background: linear-gradient(135deg, #FF6FD8, #FF9F43, #FFD93D);
+    border-radius: 30px;
+    padding: 14px 40px;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.15), 0 12px 30px rgba(255,111,216,0.4);
+    margin-bottom: 6px;
+    animation: bannerBounce 2s ease-in-out infinite;
+  }
+  @keyframes bannerBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .title-banner h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(32px, 7vw, 56px);
+    color: white;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.2);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .subtitle {
+    font-size: clamp(16px, 3.5vw, 22px);
+    color: #555;
+    font-weight: 800;
+    margin-bottom: 14px;
+    background: white;
+    padding: 8px 24px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 3px dashed #FFD93D;
+  }
+
+  /* Buddy character */
+  .buddy {
+    font-size: 64px;
+    animation: buddyWiggle 1.8s ease-in-out infinite;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  @keyframes buddyWiggle {
+    0%, 100% { transform: rotate(-8deg) scale(1); }
+    50%  { transform: rotate(8deg) scale(1.1); }
+  }
+
+  /* Attempts bar */
+  .attempts-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border-radius: 50px;
+    padding: 10px 28px;
+    font-size: clamp(18px, 3.5vw, 24px);
+    font-weight: 900;
+    color: #444;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    margin-bottom: 20px;
+    border: 3px solid #FFD93D;
+  }
+  .attempts-bar .star-count { color: #FF9F43; font-size: 1.2em; }
+
+  /* BOXES GRID */
+  .container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    width: 100%;
+    max-width: 580px;
+    margin-bottom: 22px;
+  }
+
+  .box {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 28px;
+    cursor: pointer;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(18px, 4vw, 26px);
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    box-shadow: 0 7px 0 rgba(0,0,0,0.2), 0 10px 24px rgba(0,0,0,0.15);
+  }
+  .box .box-emoji {
+    font-size: clamp(30px, 7vw, 46px);
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+    transition: transform 0.3s;
+  }
+  .box:hover:not(:disabled) {
+    transform: translateY(-6px) scale(1.06);
+    box-shadow: 0 13px 0 rgba(0,0,0,0.18), 0 18px 30px rgba(0,0,0,0.2);
+  }
+  .box:active:not(:disabled) {
+    transform: translateY(4px) scale(0.97);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+  }
+  .box:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Shimmer on boxes */
+  .box::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: skewX(-20deg);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  .box:nth-child(2)::after { animation-delay: 0.5s; }
+  .box:nth-child(3)::after { animation-delay: 1s; }
+  .box:nth-child(4)::after { animation-delay: 1.5s; }
+  .box:nth-child(5)::after { animation-delay: 2s; }
+  .box:nth-child(6)::after { animation-delay: 2.5s; }
+  @keyframes shimmer {
+    0%, 70%, 100% { left: -60%; }
+    40% { left: 130%; }
+  }
+
+  #box1 { background: linear-gradient(135deg, #FF6B6B, #ee2b2b); }
+  #box2 { background: linear-gradient(135deg, #4ECDC4, #1aab9e); }
+  #box3 { background: linear-gradient(135deg, #FFD93D, #f5a623); }
+  #box4 { background: linear-gradient(135deg, #C77DFF, #9b33e8); }
+  #box5 { background: linear-gradient(135deg, #6BCB77, #38a844); }
+  #box6 { background: linear-gradient(135deg, #4D96FF, #1566d4); }
+
+  /* Win/Loss state overlays */
+  .box.wrong {
+    animation: wrongShake 0.5s ease;
+    filter: brightness(0.55) saturate(0.3);
+  }
+  @keyframes wrongShake {
+    0%,100% { transform: rotate(0); }
+    20% { transform: rotate(-8deg); }
+    40% { transform: rotate(8deg); }
+    60% { transform: rotate(-5deg); }
+    80% { transform: rotate(5deg); }
+  }
+  .box.correct {
+    animation: correctPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: brightness(1.1) saturate(1.3);
+  }
+  @keyframes correctPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25) rotate(5deg); }
+    100% { transform: scale(1.08); }
+  }
+
+  /* Message panel */
+  #message {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 28px;
+    padding: 18px 28px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(22px, 5vw, 36px);
+    text-align: center;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 10px 30px rgba(0,0,0,0.12);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: white;
+    color: #444;
+    border: 3px solid #eee;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  #message.ready { background: white; border-color: #eee; color: #666; }
+  #message.win {
+    background: linear-gradient(135deg, #6BCB77, #38c456);
+    border-color: #2da844;
+    color: white;
+    animation: winPulse 0.6s ease;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  #message.lose {
+    background: linear-gradient(135deg, #FF6B6B, #e83030);
+    border-color: #c72222;
+    color: white;
+    animation: losePop 0.4s ease;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  @keyframes winPulse {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes losePop {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+
+  /* Play Again button */
+  #restart-btn {
+    display: none;
+    margin-top: 18px;
+    padding: 16px 44px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(20px, 4vw, 28px);
+    color: white;
+    background: linear-gradient(135deg, #FF9F43, #e67e22);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 7px 0 #c0690e, 0 10px 20px rgba(255,159,67,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    animation: buttonPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+  #restart-btn:hover { transform: translateY(-4px); box-shadow: 0 11px 0 #c0690e, 0 14px 24px rgba(255,159,67,0.4); }
+  #restart-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #c0690e; }
+  @keyframes buttonPop {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    top: -20px;
+    border-radius: 3px;
+    animation: confettiFall linear forwards;
+    pointer-events: none;
+    z-index: 999;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+  }
+
+  /* Floating score stars */
+  .float-star {
+    position: fixed;
+    font-size: 36px;
+    pointer-events: none;
+    z-index: 998;
+    animation: floatUp 1.2s ease-out forwards;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) scale(0.5); opacity: 1; }
+    100% { transform: translateY(-120px) scale(1.2); opacity: 0; }
+  }
+
+  /* Wiggle on hover for buddy after win */
+  .buddy.celebrating {
+    animation: celebrate 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes celebrate {
+    from { transform: rotate(-15deg) scale(1.1); }
+    to   { transform: rotate(15deg) scale(1.2); }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Background clouds -->
+<div class="cloud cloud-1"></div>
+<div class="cloud cloud-2"></div>
+<div class="cloud cloud-3"></div>
+
+<!-- Twinkling stars -->
+<span class="star-bg" style="top:12%;left:5%;animation-delay:0s;">⭐</span>
+<span class="star-bg" style="top:18%;right:8%;animation-delay:0.7s;">✨</span>
+<span class="star-bg" style="top:65%;left:3%;animation-delay:1.4s;">🌟</span>
+<span class="star-bg" style="top:75%;right:4%;animation-delay:0.3s;">⭐</span>
+<span class="star-bg" style="top:40%;left:1%;animation-delay:1s;">✨</span>
+<span class="star-bg" style="top:50%;right:2%;animation-delay:1.8s;">🌟</span>
+
+<div class="game-wrapper">
+
+  <div class="title-banner">
+    <h1>🗺️ Treasure Hunt! 🎁</h1>
+  </div>
+
+  <div class="subtitle">🔍 Find the hidden treasure!</div>
+
+  <div id="buddy" class="buddy">🧙‍♂️</div>
+
+  <div class="attempts-bar">
+    <span>🎯 Tries:</span>
+    <span id="attempts-count" class="star-count">0</span>
+    <span id="star-display">⭐⭐⭐</span>
+  </div>
+
+  <div class="container">
+    <button class="box" id="box1" onclick="checkBox(1)">
+      <span class="box-emoji">🎀</span>
+      <span>BOX 1</span>
+    </button>
+    <button class="box" id="box2" onclick="checkBox(2)">
+      <span class="box-emoji">🎪</span>
+      <span>BOX 2</span>
+    </button>
+    <button class="box" id="box3" onclick="checkBox(3)">
+      <span class="box-emoji">🎠</span>
+      <span>BOX 3</span>
+    </button>
+    <button class="box" id="box4" onclick="checkBox(4)">
+      <span class="box-emoji">🎨</span>
+      <span>BOX 4</span>
+    </button>
+    <button class="box" id="box5" onclick="checkBox(5)">
+      <span class="box-emoji">🎭</span>
+      <span>BOX 5</span>
+    </button>
+    <button class="box" id="box6" onclick="checkBox(6)">
+      <span class="box-emoji">🎯</span>
+      <span>BOX 6</span>
+    </button>
+  </div>
+
+  <div id="message" class="ready">
+    🧙‍♂️ Pick a box to find the treasure!
+  </div>
+
+  <button id="restart-btn" onclick="restartGame()">
+    🔄 Play Again!
+  </button>
+
+</div>
+
+<script>
+  let treasureBox = Math.floor(Math.random() * 6) + 1;
+  let attempts = 0;
+  let gameOver = false;
+  const buddyEmojis = ['🧙‍♂️','🦄','🐉','🦊','🐸','🦁'];
+  const winMessages = [
+    '🎉 YOU FOUND IT! 🎉',
+    '🏆 TREASURE! AMAZING! 🏆',
+    '⭐ SUPERSTAR! ⭐',
+    '🎊 HOORAY! YOU WIN! 🎊',
+    '🥳 WOW! BRILLIANT! 🥳'
+  ];
+  const loseMessages = [
+    '🙈 Oops! Try again!',
+    '💨 Not here! Keep looking!',
+    '🔍 Hmm... keep searching!',
+    '😅 So close! Try another!',
+    '🤔 Nope! Where could it be?'
+  ];
+
+  // Confetti colors
+  const confettiColors = ['#FF6B6B','#4ECDC4','#FFD93D','#C77DFF','#6BCB77','#4D96FF','#FF9F43','#FF6FD8'];
+
+  function getStarDisplay(tries) {
+    if (tries <= 2) return '⭐⭐⭐';
+    if (tries <= 4) return '⭐⭐';
+    return '⭐';
+  }
+
+  function checkBox(boxNumber) {
+    if (gameOver) return;
+
+    attempts++;
+    document.getElementById('attempts-count').textContent = attempts;
+    document.getElementById('star-display').textContent = getStarDisplay(attempts);
+
+    const clickedBox = document.getElementById('box' + boxNumber);
+
+    if (boxNumber === treasureBox) {
+      // WIN!
+      gameOver = true;
+      clickedBox.classList.add('correct');
+      clickedBox.innerHTML = `<span style="font-size:clamp(34px,8vw,54px);animation:correctPop 0.5s ease">🎁</span><span>TREASURE!</span>`;
+      clickedBox.disabled = true;
+
+      const msgEl = document.getElementById('message');
+      msgEl.className = 'win';
+      msgEl.innerHTML = winMessages[Math.floor(Math.random() * winMessages.length)];
+
+      // Buddy celebrates
+      const buddy = document.getElementById('buddy');
+      buddy.textContent = '🎉';
+      buddy.classList.add('celebrating');
+
+      // Disable all boxes
+      document.querySelectorAll('.box').forEach(b => b.disabled = true);
+
+      // Launch confetti!
+      launchConfetti();
+
+      // Show restart after delay
+      setTimeout(() => {
+        document.getElementById('restart-btn').style.display = 'inline-block';
+      }, 1200);
+
+      // Float stars from clicked box
+      spawnFloatStar(clickedBox, '⭐');
+      setTimeout(() => spawnFloatStar(clickedBox, '✨'), 300);
+      setTimeout(() => spawnFloatStar(clickedBox, '🌟'), 600);
+
+    } else {
+      // WRONG
+      clickedBox.classList.add('wrong');
+      clickedBox.innerHTML = `<span style="font-size:clamp(30px,7vw,46px)">💨</span><span>Empty!</span>`;
+      clickedBox.disabled = true;
+
+      const msgEl = document.getElementById('message');
+      msgEl.className = 'lose';
+      msgEl.innerHTML = loseMessages[Math.floor(Math.random() * loseMessages.length)];
+
+      // Change buddy
+      const buddy = document.getElementById('buddy');
+      buddy.textContent = buddyEmojis[Math.floor(Math.random() * buddyEmojis.length)];
+
+      // Reset message after 1.5s
+      setTimeout(() => {
+        if (!gameOver) {
+          msgEl.className = 'ready';
+          msgEl.innerHTML = '🔍 Keep looking! The treasure is hiding!';
+        }
+      }, 1600);
+    }
+  }
+
+  function launchConfetti() {
+    const count = 80;
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const piece = document.createElement('div');
+        piece.classList.add('confetti-piece');
+        const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        const left = Math.random() * 100;
+        const duration = 1.5 + Math.random() * 2;
+        const size = 8 + Math.random() * 14;
+        const isCircle = Math.random() > 0.5;
+        piece.style.cssText = `
+          left: ${left}vw;
+          background: ${color};
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: ${isCircle ? '50%' : '3px'};
+          animation-duration: ${duration}s;
+        `;
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), duration * 1000 + 200);
+      }, i * 30);
+    }
+  }
+
+  function spawnFloatStar(el, emoji) {
+    const rect = el.getBoundingClientRect();
+    const star = document.createElement('span');
+    star.classList.add('float-star');
+    star.textContent = emoji;
+    star.style.left = (rect.left + rect.width / 2 - 18) + 'px';
+    star.style.top = (rect.top + window.scrollY + rect.height / 2) + 'px';
+    document.body.appendChild(star);
+    setTimeout(() => star.remove(), 1300);
+  }
+
+  function restartGame() {
+    // Reset state
+    treasureBox = Math.floor(Math.random() * 6) + 1;
+    attempts = 0;
+    gameOver = false;
+
+    // Reset UI
+    document.getElementById('attempts-count').textContent = '0';
+    document.getElementById('star-display').textContent = '⭐⭐⭐';
+
+    const boxEmojis = ['🎀','🎪','🎠','🎨','🎭','🎯'];
+    for (let i = 1; i <= 6; i++) {
+      const box = document.getElementById('box' + i);
+      box.disabled = false;
+      box.className = 'box';
+      box.innerHTML = `<span class="box-emoji">${boxEmojis[i-1]}</span><span>BOX ${i}</span>`;
+    }
+
+    const msgEl = document.getElementById('message');
+    msgEl.className = 'ready';
+    msgEl.innerHTML = '🧙‍♂️ Pick a box to find the treasure!';
+
+    const buddy = document.getElementById('buddy');
+    buddy.textContent = '🧙‍♂️';
+    buddy.classList.remove('celebrating');
+
+    document.getElementById('restart-btn').style.display = 'none';
+  }
+</script>
+</body>
+</html>
